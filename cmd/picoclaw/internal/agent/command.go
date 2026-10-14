@@ -1,7 +1,11 @@
 package agent
 
 import (
+	"strings"
+
 	"github.com/spf13/cobra"
+
+	"github.com/sipeed/picoclaw/pkg/session"
 )
 
 func NewAgentCommand() *cobra.Command {
@@ -17,6 +21,9 @@ func NewAgentCommand() *cobra.Command {
 		Short: "Interact with the agent directly",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
+			if cmd.Flags().Changed("session") {
+				sessionKey = cliSessionKey(sessionKey)
+			}
 			return agentCmd(message, sessionKey, model, debug)
 		},
 	}
@@ -27,4 +34,16 @@ func NewAgentCommand() *cobra.Command {
 	cmd.Flags().StringVarP(&model, "model", "", "", "Model to use")
 
 	return cmd
+}
+
+// cliSessionKey maps a user-chosen --session name to an explicit session key.
+// Plain names like "work" are otherwise ignored by the agent loop, which only
+// honors opaque (sk_v1_...) or legacy (agent:...) keys, so every CLI run would
+// share one session.
+func cliSessionKey(name string) string {
+	name = strings.TrimSpace(name)
+	if name == "" || session.IsExplicitSessionKey(name) {
+		return name
+	}
+	return session.BuildOpaqueSessionKey("cli:" + name)
 }
