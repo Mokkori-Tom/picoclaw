@@ -15,6 +15,7 @@ import (
 	"github.com/sipeed/picoclaw/pkg/agent"
 	"github.com/sipeed/picoclaw/pkg/bus"
 	"github.com/sipeed/picoclaw/pkg/logger"
+	"github.com/sipeed/picoclaw/pkg/media"
 	"github.com/sipeed/picoclaw/pkg/providers"
 )
 
@@ -53,6 +54,7 @@ func agentCmd(message, sessionKey, model string, debug bool) error {
 	defer msgBus.Close()
 	agentLoop := agent.NewAgentLoop(cfg, msgBus, provider)
 	defer agentLoop.Close()
+	agentLoop.SetMediaStore(media.NewFileMediaStore())
 
 	// Print agent startup info (only for interactive mode)
 	startupInfo := agentLoop.GetStartupInfo()
